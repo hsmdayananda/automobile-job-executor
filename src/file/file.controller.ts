@@ -12,7 +12,6 @@ export class FileController {
     @Post('upload')
     // @UseInterceptors(FileInterceptor('file'))
     async uploadFile(@Body() file) {
-        console.log(' hello file', file)
         await this.fileProcQueue.add('upload', {
             file: file,
         });

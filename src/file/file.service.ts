@@ -23,18 +23,14 @@ export class FileService {
                 throw error.message;
             })
             .on('data', row => {
-                //console.log("data row", row);
                 automobiles.push(row);
             })
             .on('end', async () => {
-                // Save automobiles to PostgreSQL database
-                //console.log('table data', automobiles);
                 await getConnection()
                     .createQueryBuilder()
                     .insert()
                     .into(FileEntity)
                     .values(
-                        //pass list of automobiles
                         automobiles
 
                     )
@@ -53,7 +49,7 @@ export class FileService {
         let query = gql`
             {
                 allAutomobileEntities(
-                  filter:{${input.criteria.filterField}: {${input.criteria.operator}: ${input.criteria.value}}} 
+                    orderBy: MANUFACTURED_DATE_ASC
                 ) {
                   nodes {
                     ageOfVehicle
@@ -77,11 +73,36 @@ export class FileService {
 
 
         let out = await request(this.url, query);
-        let data = out.allAutomobileEntities.nodes;
-        let csv = await this.generateCsv(data);
-        console.log('csv ', csv)
-        return csv;
+        let data = this.myFunction(out.allAutomobileEntities.nodes);
+        let finalData = data.filter(
+            (m) => {
+                switch (input.criteria.operator) {
+
+                    case ('lessThan'):
+                        console.log(" ageOfVehicle ", m.ageOfVehicle)
+                        return m.ageOfVehicle < input.criteria.value
+
+                    case ('lessThanOrEqualTo'):
+                        console.log(" ageOfVehicle ", m.ageOfVehicle)
+                        return m.ageOfVehicle <= input.criteria.value
+
+                    case ('greaterThan'):
+                        console.log(" ageOfVehicle ", m.ageOfVehicle)
+                        return m.ageOfVehicle > input.criteria.value
+
+                    case ('greaterThanOrEqualTo'):
+                        console.log(" ageOfVehicle ", m.ageOfVehicle)
+                        return m.ageOfVehicle >= input.criteria.value
+
+                }
+            }
+        );
+
+        let csv = await this.generateCsv(finalData);
+        return finalData;
+
     }
+
 
     async generateCsv(data: any[]) {
         const jsonCustomers = JSON.parse(JSON.stringify(data));
@@ -100,5 +121,25 @@ export class FileService {
                 console.log(`saved as ${filename}`);
             }
         });
+    }
+
+    myFunction(data: any[]) {
+        let arr: any = [];
+        data.map((el) => {
+            var today = new Date();
+            var birthDate = new Date(el.manufacturedDate);
+            var age = today.getFullYear() - birthDate.getFullYear();
+            var m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            console.log(' hello ', age)
+            el.ageOfVehicle = age;
+            return age;
+        });
+        //arr = arr2;
+        console.log(' arr ', data)
+        return data;
+
     }
 }

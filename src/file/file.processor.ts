@@ -14,7 +14,6 @@ export class FileProcessor {
     @Process('upload')
     handleUpload(job: Job) {
         this.logger.debug('Start uploading...');
-        console.log(' input ==>>>', job.data)
         this.fileService.bulkUpload(job.data.file);
         this.logger.debug('Uploading completed');
     }
@@ -22,7 +21,6 @@ export class FileProcessor {
     @Process('download')
     handleDownload(job: Job) {
         this.logger.debug('Start downloading...');
-        console.log(' input ==>>>', job.data)
         this.fileService.filterData(job.data);
         this.logger.debug('Download completed');
     }
@@ -39,7 +37,6 @@ export class FileProcessor {
         console.log(
             `Processing job ${job.id} of type ${job.name} with data ${job.data}...`,
         );
-        // return this.httpService.post('http://localhost:4003/websocket-gateway/send-message', socketObj);
 
     }
 
