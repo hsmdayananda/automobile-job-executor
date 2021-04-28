@@ -14,6 +14,7 @@ export class FileService {
     constructor(@InjectRepository(FileEntity) private autoMobileRepo: Repository<FileEntity>, private httpService: HttpService) { }
 
     async bulkUpload(jobData: Express.Multer.File) {
+
         const automobiles = [];
         fs.createReadStream(jobData.path).
 
@@ -40,12 +41,9 @@ export class FileService {
                     });
             });
 
-
     }
 
     async filterData(input: any) {
-        console.log(' input filter', input)
-
         let query = gql`
             {
                 allAutomobileEntities(
@@ -68,30 +66,22 @@ export class FileService {
             `
 
             ;
-
-        console.log('my quer ', query)
-
-
         let out = await request(this.url, query);
-        let data = this.myFunction(out.allAutomobileEntities.nodes);
+        let data = this.calculateAgeOfVehicle(out.allAutomobileEntities.nodes);
         let finalData = data.filter(
             (m) => {
                 switch (input.criteria.operator) {
 
                     case ('lessThan'):
-                        console.log(" ageOfVehicle ", m.ageOfVehicle)
                         return m.ageOfVehicle < input.criteria.value
 
                     case ('lessThanOrEqualTo'):
-                        console.log(" ageOfVehicle ", m.ageOfVehicle)
                         return m.ageOfVehicle <= input.criteria.value
 
                     case ('greaterThan'):
-                        console.log(" ageOfVehicle ", m.ageOfVehicle)
                         return m.ageOfVehicle > input.criteria.value
 
                     case ('greaterThanOrEqualTo'):
-                        console.log(" ageOfVehicle ", m.ageOfVehicle)
                         return m.ageOfVehicle >= input.criteria.value
 
                 }
@@ -123,8 +113,7 @@ export class FileService {
         });
     }
 
-    myFunction(data: any[]) {
-        let arr: any = [];
+    calculateAgeOfVehicle(data: any[]) {
         data.map((el) => {
             var today = new Date();
             var birthDate = new Date(el.manufacturedDate);
@@ -133,12 +122,9 @@ export class FileService {
             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
             }
-            console.log(' hello ', age)
             el.ageOfVehicle = age;
             return age;
         });
-        //arr = arr2;
-        console.log(' arr ', data)
         return data;
 
     }
